@@ -516,7 +516,10 @@ function isDifferentFromCurrent(key, value, creatorData) {
   } else {
     currentValue = MetadataSearchDialog.item.getField(key) || "";
   }
-  return String(value || "").trim() !== String(currentValue || "").trim();
+  return (
+    normalizeForCompare(key, value) !==
+    normalizeForCompare(key, currentValue)
+  );
 }
 
 function getPref(zotero, key) {
@@ -864,6 +867,7 @@ function appendBibFields(doc, section, result, autoCheck) {
   }
 
   if (result._bibData.creators && result._bibData.creators.length) {
+    if (!hasCreatorMatch(section, result._bibData.creators)) {
     section.appendChild(
       createFieldRow(
         doc,
@@ -878,10 +882,14 @@ function appendBibFields(doc, section, result, autoCheck) {
         autoCheck,
       ),
     );
+    }
   }
 
   var fields = result._bibData.fields || {};
   Object.keys(fields).forEach(function (key) {
+    if (hasFieldMatch(section, key, fields[key])) {
+      return;
+    }
     section.appendChild(
       createFieldRow(doc, key, fields[key], true, undefined, autoCheck),
     );
@@ -1073,6 +1081,59 @@ function normalizeBibValue(value) {
 
 function normalizePages(value) {
   return String(value || "").replace(/--/g, "\u2013");
+}
+
+function normalizeForCompare(key, value) {
+  var normalized = normalizePages(stripBibBraces(String(value || "")));
+  normalized = normalized.replace(/\s+/g, " ").trim();
+  if (key === "title" || key === "publicationTitle" || key === "publisher") {
+    normalized = normalized.replace(/\.+$/g, "").trim();
+  }
+  if (key === "itemType") {
+    normalized = normalized.toLowerCase();
+  }
+  return normalized;
+}
+
+function normalizeCreators(creators) {
+  return creators
+    .map(function (c) {
+      return (c.firstName + " " + c.lastName).trim().toLowerCase();
+    })
+    .filter(Boolean)
+    .join(", ");
+}
+
+function hasCreatorMatch(section, creators) {
+  var target = normalizeCreators(creators);
+  var boxes = section.querySelectorAll('checkbox[data-creator-data]');
+  for (var i = 0; i < boxes.length; i++) {
+    var data = boxes[i].getAttribute("data-creator-data");
+    if (!data) {
+      continue;
+    }
+    try {
+      var parsed = JSON.parse(data);
+      if (normalizeCreators(parsed) === target) {
+        return true;
+      }
+    } catch (e) {}
+  }
+  return false;
+}
+
+function hasFieldMatch(section, key, value) {
+  var target = normalizeForCompare(key, value);
+  var boxes = section.querySelectorAll(
+    'checkbox[data-field-name="' + key + '"]',
+  );
+  for (var i = 0; i < boxes.length; i++) {
+    var existing = boxes[i].getAttribute("data-field-value");
+    if (normalizeForCompare(key, existing) === target) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function mapBibtexType(entryType) {
