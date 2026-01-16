@@ -182,6 +182,7 @@ var MetadataSearchDialog = {
 
         var results = [];
         var searches = [];
+        var errors = [];
 
         if (searchOptions.crossrefCheckbox.checked) {
           searches.push(searchCrossRef(itemTitle || "", creators));
@@ -205,6 +206,8 @@ var MetadataSearchDialog = {
         for (var i = 0; i < settled.length; i++) {
           if (settled[i].status === "fulfilled") {
             results = results.concat(settled[i].value);
+          } else {
+            errors.push(formatSearchError(settled[i].reason));
           }
         }
 
@@ -214,7 +217,7 @@ var MetadataSearchDialog = {
 
         progressLabel.setAttribute(
           "value",
-          "Found " + results.length + " results",
+          buildProgressMessage(results.length, errors),
         );
 
         results.forEach(function (result, index) {
@@ -250,7 +253,7 @@ var MetadataSearchDialog = {
           await Promise.all(bibPromises);
           progressLabel.setAttribute(
             "value",
-            "Found " + results.length + " results",
+            buildProgressMessage(results.length, errors),
           );
         }
 
@@ -465,6 +468,24 @@ function getItemFields(item) {
   return fields;
 }
 
+function buildProgressMessage(resultCount, errors) {
+  var message = "Found " + resultCount + " results";
+  if (errors && errors.length) {
+    message += " | Errors: " + errors.join("; ");
+  }
+  return message;
+}
+
+function formatSearchError(error) {
+  if (!error) {
+    return "Unknown error";
+  }
+  if (error.source) {
+    return error.source + ": " + error.message;
+  }
+  return error.message || String(error);
+}
+
 function isDifferentFromCurrent(key, value, creatorData) {
   if (!MetadataSearchDialog.item) {
     return false;
@@ -649,6 +670,9 @@ function searchCrossRef(title, creators) {
     });
 
     return results;
+  }).catch(function (error) {
+    error.source = "CrossRef";
+    throw error;
   });
 }
 
@@ -727,20 +751,35 @@ function searchDBLP(title, creators) {
     });
 
     return results;
+  }).catch(function (error) {
+    error.source = "DBLP";
+    throw error;
   });
 }
 
 function getJSON(url) {
   if (typeof fetch === "function") {
     return fetch(url).then(function (response) {
+      if (!response.ok) {
+        var error = new Error("HTTP " + response.status);
+        error.status = response.status;
+        throw error;
+      }
       return response.json();
     });
   }
 
   if (MetadataSearchDialog.zotero && MetadataSearchDialog.zotero.HTTP) {
-    return MetadataSearchDialog.zotero.HTTP.request("GET", url).then(function (response) {
-      return JSON.parse(response.responseText);
-    });
+    return MetadataSearchDialog.zotero.HTTP.request("GET", url).then(
+      function (response) {
+        if (response.status && response.status !== 200) {
+          var error = new Error("HTTP " + response.status);
+          error.status = response.status;
+          throw error;
+        }
+        return JSON.parse(response.responseText);
+      },
+    );
   }
 
   return Promise.reject(new Error("No HTTP client available"));
@@ -756,12 +795,22 @@ function saveItem(item) {
 function getText(url) {
   if (typeof fetch === "function") {
     return fetch(url).then(function (response) {
+      if (!response.ok) {
+        var error = new Error("HTTP " + response.status);
+        error.status = response.status;
+        throw error;
+      }
       return response.text();
     });
   }
   if (MetadataSearchDialog.zotero && MetadataSearchDialog.zotero.HTTP) {
     return MetadataSearchDialog.zotero.HTTP.request("GET", url).then(
       function (response) {
+        if (response.status && response.status !== 200) {
+          var error = new Error("HTTP " + response.status);
+          error.status = response.status;
+          throw error;
+        }
         return response.responseText;
       },
     );
@@ -1019,7 +1068,11 @@ function stripBibBraces(value) {
 }
 
 function normalizeBibValue(value) {
-  return stripBibBraces(value).trim();
+  return normalizePages(stripBibBraces(value).trim());
+}
+
+function normalizePages(value) {
+  return String(value || "").replace(/--/g, "\u2013");
 }
 
 function mapBibtexType(entryType) {
