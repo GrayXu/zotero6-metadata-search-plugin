@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>metadatasearch@emptysquare.net</em:id>
+    <em:name>Metadata Search</em:name>
+    <em:version>0.0.3-z6</em:version>
+    <em:description>Update Zotero items with metadata from CrossRef and DBLP.</em:description>
+    <em:creator>ajdavis</em:creator>
+    <em:homepageURL>https://github.com/ajdavis/zotero-metadata-search-plugin</em:homepageURL>
+    <em:bootstrap>true</em:bootstrap>
+    <em:iconURL>chrome://metadatasearch/content/icons/favicon.png</em:iconURL>
+
+    <em:targetApplication>
+      <Description>
+        <em:id>zotero@chnm.gmu.edu</em:id>
+        <em:minVersion>6.0</em:minVersion>
+        <em:maxVersion>6.*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>
