@@ -258,6 +258,11 @@ var MetadataSearchDialog = {
         searchButton.disabled = false;
       }.bind(this),
     );
+
+    // Auto-run search once when the dialog opens.
+    window.setTimeout(function () {
+      searchButton.click();
+    }, 0);
   },
 };
 
@@ -972,10 +977,7 @@ function mapBibtexFields(rawFields, entryType) {
 
   Object.keys(mapping).forEach(function (bibKey) {
     if (rawFields[bibKey]) {
-      var value = rawFields[bibKey];
-      if (bibKey === "title") {
-        value = stripBibBraces(value);
-      }
+      var value = normalizeBibValue(rawFields[bibKey]);
       fields[mapping[bibKey]] = value;
     }
   });
@@ -1014,6 +1016,10 @@ function parseAuthors(authorField) {
 
 function stripBibBraces(value) {
   return String(value || "").replace(/[{}]/g, "");
+}
+
+function normalizeBibValue(value) {
+  return stripBibBraces(value).trim();
 }
 
 function mapBibtexType(entryType) {
