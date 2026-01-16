@@ -4,7 +4,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>metadatasearch@emptysquare.net</em:id>
     <em:name>Metadata Search</em:name>
-    <em:version>0.0.3-z6</em:version>
+    <em:version>0.0.4</em:version>
     <em:description>Update Zotero items with metadata from CrossRef and DBLP.</em:description>
     <em:creator>ajdavis</em:creator>
     <em:homepageURL>https://github.com/ajdavis/zotero-metadata-search-plugin</em:homepageURL>
