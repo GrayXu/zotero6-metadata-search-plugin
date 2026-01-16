@@ -5,7 +5,7 @@ Update Zotero items with metadata from CrossRef and DBLP.
 ## Features
 - Right-click menu entry in the item list
 - Search CrossRef and DBLP by title/creators
-- Auto-pull DBLP BibTeX results and expose extra fields
+- Auto-pull DBLP BibTeX results
 - One-click update of selected fields
 
 ## Install
@@ -17,5 +17,5 @@ Update Zotero items with metadata from CrossRef and DBLP.
 - UI is in `content/dialog.xul` and `content/dialog.js`.
 - Default prefs are in `defaults/preferences/prefs.js`.
 
-## Release
-Push a tag like `v0.0.4` to trigger GitHub Actions and publish a release.
+## Attribution
+This project is a fork of [ajdavis/zotero-metadata-search-plugin](https://github.com/ajdavis/zotero-metadata-search-plugin).
