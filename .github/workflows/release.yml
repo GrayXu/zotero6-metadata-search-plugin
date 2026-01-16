@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v**
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build XPI
+        run: |
+          zip -r zotero6-metadata-search-plugin.xpi . -x ".git/*" -x ".github/*" -x "*.xpi"
+
+      - name: Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: zotero6-metadata-search-plugin.xpi
